@@ -9,6 +9,7 @@ from minipy3dr.math import Vector3
 
 @dataclass(frozen=True)
 class ProjectedVertex:
+    world: Vector3
     view: Vector3
     screen: tuple[float, float, float] | None
 

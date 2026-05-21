@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from minipy3dr import Material, Mesh, PerspectiveCamera, Renderer, Scene
+from minipy3dr import DirectionalLight, Material, Mesh, PerspectiveCamera, Renderer, Scene
 from minipy3dr.math import Vector3
 from minipy3dr.render import NumpyFrameBuffer, Rasterizer, ZBuffer
 
@@ -37,6 +37,22 @@ def make_cube_scene() -> tuple[Scene, PerspectiveCamera]:
     return scene, camera
 
 
+def make_triangle_scene(light_direction: Vector3) -> tuple[Scene, PerspectiveCamera]:
+    scene = Scene()
+    triangle = Mesh(
+        vertices=[
+            Vector3(-1, -1, -3),
+            Vector3(1, -1, -3),
+            Vector3(0, 1, -3),
+        ],
+        faces=[(0, 1, 2)],
+    )
+    scene.add(triangle, Material(color=(100, 50, 20), ambient=0.25))
+    scene.add_light(DirectionalLight(direction=light_direction))
+    camera = PerspectiveCamera(fov=90, aspect=1, near=0.1, far=100)
+    return scene, camera
+
+
 def test_cube_wireframe_uses_outer_edges() -> None:
     assert len(Mesh.cube(size=2).edges()) == 12
 
@@ -59,6 +75,26 @@ def test_solid_render_changes_pixels() -> None:
     renderer.render(scene, camera, surface, mode="solid")
 
     assert surface.changed_pixels(renderer.background) > 0
+
+
+def test_directional_light_flat_shades_front_face() -> None:
+    renderer = Renderer((64, 64))
+    surface = SurfaceStub((64, 64))
+    scene, camera = make_triangle_scene(Vector3(0, 0, -1))
+
+    renderer.render(scene, camera, surface, mode="solid")
+
+    assert surface.pixels[32][32] == (100, 50, 20)
+
+
+def test_directional_light_uses_ambient_for_unlit_face() -> None:
+    renderer = Renderer((64, 64))
+    surface = SurfaceStub((64, 64))
+    scene, camera = make_triangle_scene(Vector3(0, 0, 1))
+
+    renderer.render(scene, camera, surface, mode="solid")
+
+    assert surface.pixels[32][32] == (25, 12, 5)
 
 
 def test_fast_solid_render_changes_pixels() -> None:
