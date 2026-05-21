@@ -69,6 +69,7 @@ class MiniPy3DRApp:
         self.delta = 0.0
         self.time = 0.0
         self.frame_index = 0
+        self._keys: object | None = None
 
     @property
     def frame(self) -> AppFrame:
@@ -120,7 +121,39 @@ class MiniPy3DRApp:
         return list(events)
 
     def keys(self) -> object:
-        return self.pygame.key.get_pressed()
+        self._keys = self.pygame.key.get_pressed()
+        return self._keys
+
+    def key(self, name: str | int) -> bool:
+        keys = self._keys if self._keys is not None else self.keys()
+        key_code = name if isinstance(name, int) else key_code_from_name(self.pygame, name)
+        return bool(keys[key_code])
+
+    def move(self, mesh: Mesh, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> Mesh:
+        mesh.position = Vector3(mesh.position.x + x, mesh.position.y + y, mesh.position.z + z)
+        return mesh
+
+    def rotate(self, mesh: Mesh, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> Mesh:
+        mesh.rotation = Vector3(mesh.rotation.x + x, mesh.rotation.y + y, mesh.rotation.z + z)
+        return mesh
+
+    def set_position(self, mesh: Mesh, x: float, y: float, z: float) -> Mesh:
+        mesh.position = Vector3(x, y, z)
+        return mesh
+
+    def set_rotation(self, mesh: Mesh, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> Mesh:
+        mesh.rotation = Vector3(x, y, z)
+        return mesh
+
+    def draw_text(
+        self,
+        text: str,
+        position: tuple[int, int] = (20, 20),
+        color: tuple[int, int, int] = (240, 244, 255),
+        size: int = 28,
+    ) -> None:
+        font = self.pygame.font.SysFont("consolas", size)
+        self.screen.blit(font.render(text, True, color), position)
 
     def render(self) -> None:
         self.render_scene(self.scene)
@@ -145,6 +178,7 @@ class MiniPy3DRApp:
     ) -> None:
         while self.running:
             delta = self.tick()
+            self._keys = None
             for event in self.events():
                 if close_on_escape and event.type == self.pygame.KEYDOWN and event.key == self.pygame.K_ESCAPE:
                     self.stop()
@@ -164,3 +198,20 @@ def vec3(value: Vector3 | tuple[float, float, float]) -> Vector3:
     if isinstance(value, Vector3):
         return value
     return Vector3(value[0], value[1], value[2])
+
+
+def key_code_from_name(pygame: object, name: str) -> int:
+    normalized = name.lower().strip()
+    aliases = {
+        "esc": "escape",
+        "return": "enter",
+        "left_arrow": "left",
+        "right_arrow": "right",
+        "up_arrow": "up",
+        "down_arrow": "down",
+    }
+    normalized = aliases.get(normalized, normalized)
+    for attr in (f"K_{normalized}", f"K_{normalized.upper()}"):
+        if hasattr(pygame, attr):
+            return int(getattr(pygame, attr))
+    raise KeyError(f"Unknown key name: {name}")

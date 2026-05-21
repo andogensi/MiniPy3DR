@@ -1,6 +1,6 @@
 """MiniPy3DR: a small software 3D renderer for pygame."""
 
-from minipy3dr.app import AppFrame, MiniPy3DRApp, vec3
+from minipy3dr.app import AppFrame, MiniPy3DRApp, key_code_from_name, vec3
 from minipy3dr.core import DirectionalLight, Material, Mesh, PerspectiveCamera, Scene
 from minipy3dr.math import Matrix4, Transform, Vector2, Vector3, Vector4
 from minipy3dr.pygame import KeyboardCameraController
@@ -26,5 +26,6 @@ __all__ = [
     "Vector2",
     "Vector3",
     "Vector4",
+    "key_code_from_name",
     "vec3",
 ]

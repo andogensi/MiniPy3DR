@@ -390,3 +390,4 @@ pytest: テスト用
 4. `Mesh.cube()` を実装する。
 5. `rotating_cube_wireframe.py` を作成する。
 
+bakaa

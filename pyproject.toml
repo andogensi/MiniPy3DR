@@ -1,8 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "minipy3dr"
 version = "0.3.0"
 description = "A small software 3D renderer for pygame surfaces."
+readme = "README.md"
 requires-python = ">=3.10"
+keywords = ["pygame", "3d", "renderer", "education", "software-renderer"]
+authors = [
+    { name = "MiniPy3DR contributors" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Games/Entertainment",
+    "Topic :: Multimedia :: Graphics :: 3D Rendering",
+    "Typing :: Typed",
+]
 dependencies = [
     "numpy>=1.26",
     "pygame>=2.5",
@@ -10,8 +33,20 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "build>=1",
     "pytest>=8",
+    "twine>=5",
 ]
+
+[project.scripts]
+minipy3dr-demo = "minipy3dr.demo:main"
+
+[tool.setuptools.packages.find]
+include = ["minipy3dr*"]
+exclude = ["docs*", "examples*", "tests*"]
+
+[tool.setuptools.package-data]
+minipy3dr = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
