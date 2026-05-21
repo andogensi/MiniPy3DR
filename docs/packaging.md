@@ -7,25 +7,25 @@ This project uses `pyproject.toml` with setuptools.
 After pushing the repository to GitHub, users can install it directly:
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 ```
 
 Install a branch:
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git@main"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 ```
 
 Install a version tag:
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git@v0.3.0"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.3.0"
 ```
 
 Force reinstall after pushing changes:
 
 ```powershell
-python -m pip install --upgrade --force-reinstall "git+https://github.com/OWNER/MiniPy3DR.git@main"
+python -m pip install --upgrade --force-reinstall "git+https://github.com/andogensi/MiniPy3DR.git@main"
 ```
 
 For private repositories, students need GitHub access and a working Git credential setup.
@@ -37,7 +37,7 @@ git status
 git add .
 git commit -m "Prepare MiniPy3DR package install"
 git branch -M main
-git remote add origin https://github.com/OWNER/MiniPy3DR.git
+git remote add origin https://github.com/andogensi/MiniPy3DR.git
 git push -u origin main
 git tag v0.3.0
 git push origin v0.3.0

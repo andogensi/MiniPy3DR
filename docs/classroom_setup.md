@@ -5,16 +5,15 @@
 ## GitHub から入れる場合
 
 GitHub に公開したリポジトリから入れる場合は、次を 1 回だけ実行します。
-`OWNER` は自分の GitHub ユーザー名または Organization 名に置き換えてください。
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 ```
 
 バージョンを固定したい場合は、タグを付けてから次のようにします。
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git@v0.3.0"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.3.0"
 ```
 
 ## ローカル開発時の準備

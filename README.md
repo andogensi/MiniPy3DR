@@ -9,14 +9,14 @@ the basics of cameras, meshes, lights, flat shading, and z-buffer rendering.
 From GitHub:
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 ```
 
 From a specific branch or tag:
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git@main"
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git@v0.3.0"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.3.0"
 ```
 
 From this repository:

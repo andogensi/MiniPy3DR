@@ -5,28 +5,26 @@ MiniPy3DR は `pyproject.toml` を持っているので、GitHub に push すれ
 
 ## インストールする側
 
-`OWNER` を GitHub のユーザー名または Organization 名に置き換えます。
-
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 ```
 
 特定のブランチを入れる場合:
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git@main"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 ```
 
 授業ではタグで固定するのがおすすめです。
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git@v0.3.0"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.3.0"
 ```
 
 更新したものを入れ直す場合:
 
 ```powershell
-python -m pip install --upgrade --force-reinstall "git+https://github.com/OWNER/MiniPy3DR.git@main"
+python -m pip install --upgrade --force-reinstall "git+https://github.com/andogensi/MiniPy3DR.git@main"
 ```
 
 ## 先生側: GitHub に置く手順
@@ -36,7 +34,7 @@ git status
 git add .
 git commit -m "Prepare MiniPy3DR package install"
 git branch -M main
-git remote add origin https://github.com/OWNER/MiniPy3DR.git
+git remote add origin https://github.com/andogensi/MiniPy3DR.git
 git push -u origin main
 git tag v0.3.0
 git push origin v0.3.0
@@ -49,7 +47,7 @@ git push origin v0.3.0
 別フォルダで次を実行します。
 
 ```powershell
-python -m pip install "git+https://github.com/OWNER/MiniPy3DR.git@main"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 python -c "from minipy3dr import App; print(App)"
 ```
 
