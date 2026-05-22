@@ -120,6 +120,38 @@ def test_numpy_solid_render_changes_pixels() -> None:
     assert surface.get_at((48, 48)) != (*renderer.background, 255)
 
 
+def test_renderer_culls_meshes_outside_view() -> None:
+    pytest.importorskip("numpy")
+    renderer = Renderer((96, 96))
+    scene = Scene()
+    visible = Mesh.cube(size=1)
+    visible.position = Vector3(0, 0, -5)
+    hidden = Mesh.cube(size=1)
+    hidden.position = Vector3(1000, 0, -5)
+    scene.add(visible, Material(color=(255, 0, 0)))
+    scene.add(hidden, Material(color=(0, 255, 0)))
+    camera = PerspectiveCamera(fov=70, aspect=1, near=0.1, far=100)
+    projected_meshes: list[Mesh] = []
+    original_project = renderer._project_mesh_with_matrices
+
+    def project_spy(
+        mesh: Mesh,
+        view: object,
+        projection: object,
+        near: float,
+        far: float,
+    ) -> object:
+        projected_meshes.append(mesh)
+        return original_project(mesh, view, projection, near, far)
+
+    renderer._project_mesh_with_matrices = project_spy  # type: ignore[method-assign]
+
+    renderer.draw_solid_numpy_scene(scene, camera)
+
+    assert any(mesh is visible for mesh in projected_meshes)
+    assert all(mesh is not hidden for mesh in projected_meshes)
+
+
 def test_zbuffer_keeps_nearest_triangle() -> None:
     surface = SurfaceStub((16, 16))
     zbuffer = ZBuffer(16, 16)

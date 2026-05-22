@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 
 from minipy3dr import PerspectiveCamera
-from minipy3dr.math import Matrix4, Vector3, Vector4
+from minipy3dr.math import Matrix4, Transform, Vector3, Vector4
 
 
 def test_vector_cross_product() -> None:
@@ -14,6 +14,23 @@ def test_matrix_translation_transforms_point() -> None:
     matrix = Matrix4.translation(2, 3, -4)
 
     assert matrix.transform_point(Vector3(1, 1, 1)) == Vector3(3, 4, -3)
+
+
+def test_transform_matrix_matches_composed_matrix() -> None:
+    transform = Transform(
+        position=Vector3(2, -1, -4),
+        rotation=Vector3(0.3, -0.4, 0.8),
+        scale=Vector3(1.5, 0.75, 2.0),
+    )
+    composed = (
+        Matrix4.translation(transform.position.x, transform.position.y, transform.position.z)
+        @ Matrix4.euler_xyz(transform.rotation)
+        @ Matrix4.scale(transform.scale.x, transform.scale.y, transform.scale.z)
+    )
+
+    for actual_row, expected_row in zip(transform.matrix().rows, composed.rows):
+        for actual, expected in zip(actual_row, expected_row):
+            assert math.isclose(actual, expected)
 
 
 def test_perspective_projects_camera_forward_point() -> None:

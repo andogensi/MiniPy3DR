@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+import math
 
 from minipy3dr.core import DirectionalLight, Material, Mesh, PerspectiveCamera, Scene
-from minipy3dr.math import Matrix4, Vector3, Vector4
+from minipy3dr.math import Matrix4, Vector3
 from minipy3dr.render.numpy_rasterizer import NumpyFrameBuffer
-from minipy3dr.render.pipeline import ProjectedVertex, viewport_transform
+from minipy3dr.render.pipeline import ProjectedVertex
 from minipy3dr.render.rasterizer import Rasterizer
 from minipy3dr.render.shader import PreparedDirectionalLight, flat_shade_prepared, prepare_lights
 from minipy3dr.render.zbuffer import ZBuffer
@@ -27,6 +28,8 @@ class Renderer:
         self.wire_color = wire_color
         self.zbuffer = ZBuffer(self.width, self.height)
         self.numpy_buffer = NumpyFrameBuffer(self.width, self.height, self.background)
+        self.enable_mesh_culling = True
+        self.mesh_cull_distance: float | None = None
 
     def render(
         self,
@@ -56,9 +59,12 @@ class Renderer:
             prepared_lights = prepare_lights(scene.lights)
             view = camera.view_matrix()
             projection = camera.projection_matrix()
+            culling = self._mesh_culling_context(camera, view)
 
             for item in scene.items:
                 if not item.mesh.visible:
+                    continue
+                if self._should_cull_mesh(item.mesh, culling):
                     continue
                 if mode == "wireframe":
                     self.draw_wireframe(item.mesh, camera, target, item.material)
@@ -81,9 +87,12 @@ class Renderer:
         prepared_lights = prepare_lights(scene.lights)
         view = camera.view_matrix()
         projection = camera.projection_matrix()
+        culling = self._mesh_culling_context(camera, view)
         triangles: list[tuple[float, tuple[int, int, int], list[tuple[float, float]]]] = []
         for item in scene.items:
             if not item.mesh.visible:
+                continue
+            if self._should_cull_mesh(item.mesh, culling):
                 continue
 
             projected = self._project_mesh_with_matrices(
@@ -125,8 +134,11 @@ class Renderer:
         prepared_lights = prepare_lights(scene.lights)
         view = camera.view_matrix()
         projection = camera.projection_matrix()
+        culling = self._mesh_culling_context(camera, view)
         for item in scene.items:
             if not item.mesh.visible:
+                continue
+            if self._should_cull_mesh(item.mesh, culling):
                 continue
 
             projected = self._project_mesh_with_matrices(
@@ -216,20 +228,132 @@ class Renderer:
         far: float,
     ) -> list[ProjectedVertex]:
         world = mesh.local_matrix()
+        world_0, world_1, world_2 = world.rows[0], world.rows[1], world.rows[2]
+        view_0, view_1, view_2 = view.rows[0], view.rows[1], view.rows[2]
+        projection_0, projection_1, projection_2, projection_3 = projection.rows
+        viewport_x_scale = 0.5 * (self.width - 1)
+        viewport_y_scale = 0.5 * (self.height - 1)
         result: list[ProjectedVertex] = []
+        append = result.append
 
         for vertex in mesh.vertices:
-            world_vertex = world.transform_point(vertex)
-            view_vertex = view.transform_point(world_vertex)
+            x, y, z = vertex.x, vertex.y, vertex.z
+            world_x = world_0[0] * x + world_0[1] * y + world_0[2] * z + world_0[3]
+            world_y = world_1[0] * x + world_1[1] * y + world_1[2] * z + world_1[3]
+            world_z = world_2[0] * x + world_2[1] * y + world_2[2] * z + world_2[3]
+            view_x = view_0[0] * world_x + view_0[1] * world_y + view_0[2] * world_z + view_0[3]
+            view_y = view_1[0] * world_x + view_1[1] * world_y + view_1[2] * world_z + view_1[3]
+            view_z = view_2[0] * world_x + view_2[1] * world_y + view_2[2] * world_z + view_2[3]
             screen = None
-            if -far <= view_vertex.z <= -near:
-                clip = projection @ Vector4(view_vertex.x, view_vertex.y, view_vertex.z, 1.0)
-                if clip.w != 0:
-                    ndc = Vector3(clip.x / clip.w, clip.y / clip.w, clip.z / clip.w)
-                    screen = viewport_transform(ndc, self.width, self.height)
-            result.append(ProjectedVertex(world_vertex, view_vertex, screen))
+            if -far <= view_z <= -near:
+                clip_x = (
+                    projection_0[0] * view_x
+                    + projection_0[1] * view_y
+                    + projection_0[2] * view_z
+                    + projection_0[3]
+                )
+                clip_y = (
+                    projection_1[0] * view_x
+                    + projection_1[1] * view_y
+                    + projection_1[2] * view_z
+                    + projection_1[3]
+                )
+                clip_z = (
+                    projection_2[0] * view_x
+                    + projection_2[1] * view_y
+                    + projection_2[2] * view_z
+                    + projection_2[3]
+                )
+                clip_w = (
+                    projection_3[0] * view_x
+                    + projection_3[1] * view_y
+                    + projection_3[2] * view_z
+                    + projection_3[3]
+                )
+                if clip_w != 0:
+                    inv_w = 1.0 / clip_w
+                    ndc_x = clip_x * inv_w
+                    ndc_y = clip_y * inv_w
+                    ndc_z = clip_z * inv_w
+                    screen = (
+                        (ndc_x + 1.0) * viewport_x_scale,
+                        (1.0 - ndc_y) * viewport_y_scale,
+                        (ndc_z + 1.0) * 0.5,
+                    )
+            append(
+                ProjectedVertex(
+                    Vector3(world_x, world_y, world_z),
+                    Vector3(view_x, view_y, view_z),
+                    screen,
+                )
+            )
 
         return result
+
+    def _mesh_culling_context(
+        self,
+        camera: PerspectiveCamera,
+        view: Matrix4,
+    ) -> tuple[Matrix4, float, float, float, float] | None:
+        if not self.enable_mesh_culling:
+            return None
+
+        max_distance = camera.far
+        if self.mesh_cull_distance is not None:
+            max_distance = min(max_distance, self.mesh_cull_distance)
+        if max_distance <= camera.near:
+            max_distance = camera.far
+
+        vertical_tan = math.tan(math.radians(camera.fov) * 0.5)
+        horizontal_tan = vertical_tan * camera.aspect
+        return (view, camera.near, max_distance, vertical_tan, horizontal_tan)
+
+    def _should_cull_mesh(
+        self,
+        mesh: Mesh,
+        culling: tuple[Matrix4, float, float, float, float] | None,
+    ) -> bool:
+        if culling is None:
+            return False
+        if not mesh.vertices:
+            return True
+
+        view, near, far, vertical_tan, horizontal_tan = culling
+        radius = self._mesh_world_radius(mesh)
+        view_x, view_y, view_z = self._transform_position_to_view(mesh.position, view)
+
+        if view_z - radius > -near:
+            return True
+        if view_z + radius < -far:
+            return True
+
+        depth = max(near, -view_z)
+        if abs(view_x) > depth * horizontal_tan + radius:
+            return True
+        if abs(view_y) > depth * vertical_tan + radius:
+            return True
+        return False
+
+    @staticmethod
+    def _mesh_world_radius(mesh: Mesh) -> float:
+        local_radius_sq = 0.0
+        for vertex in mesh.vertices:
+            radius_sq = vertex.x * vertex.x + vertex.y * vertex.y + vertex.z * vertex.z
+            if radius_sq > local_radius_sq:
+                local_radius_sq = radius_sq
+
+        scale = max(abs(mesh.scale.x), abs(mesh.scale.y), abs(mesh.scale.z))
+        return math.sqrt(local_radius_sq) * scale
+
+    @staticmethod
+    def _transform_position_to_view(position: Vector3, view: Matrix4) -> tuple[float, float, float]:
+        x, y, z = position.x, position.y, position.z
+        row_0, row_1, row_2 = view.rows[0], view.rows[1], view.rows[2]
+        return (
+            row_0[0] * x + row_0[1] * y + row_0[2] * z + row_0[3],
+            row_1[0] * x + row_1[1] * y + row_1[2] * z + row_1[3],
+            row_2[0] * x + row_2[1] * y + row_2[2] * z + row_2[3],
+        )
 
     def _draw_projected_solid(
         self,

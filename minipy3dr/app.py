@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from os import PathLike
 
 from minipy3dr.core import DirectionalLight, Material, Mesh, PerspectiveCamera, Scene
+from minipy3dr.loaders import load_obj
 from minipy3dr.math import Vector3
 from minipy3dr.render import Renderer
 
@@ -78,6 +80,9 @@ class MiniPy3DRApp:
     def add(self, mesh: Mesh, material: Material | None = None) -> Mesh:
         return self.scene.add(mesh, material)
 
+    def remove(self, mesh: Mesh) -> bool:
+        return self.scene.remove(mesh)
+
     def cube(
         self,
         position: Vector3 | tuple[float, float, float] = (0.0, 0.0, -5.0),
@@ -95,6 +100,25 @@ class MiniPy3DRApp:
         chosen_material = material
         if chosen_material is None and color is not None:
             chosen_material = Material(color=color, ambient=0.18 if ambient is None else ambient)
+        return self.add(mesh, chosen_material)
+
+    def obj(
+        self,
+        path: str | PathLike[str],
+        position: Vector3 | tuple[float, float, float] = (0.0, 0.0, -5.0),
+        scale: Vector3 | tuple[float, float, float] = (1.0, 1.0, 1.0),
+        rotation: Vector3 | tuple[float, float, float] = (0.0, 0.0, 0.0),
+        material: Material | None = None,
+        color: tuple[int, int, int] | None = None,
+        ambient: float | None = None,
+    ) -> Mesh:
+        chosen_material = material
+        if chosen_material is None and color is not None:
+            chosen_material = Material(color=color, ambient=0.18 if ambient is None else ambient)
+        mesh = load_obj(path, material=chosen_material)
+        mesh.position = vec3(position)
+        mesh.scale = vec3(scale)
+        mesh.rotation = vec3(rotation)
         return self.add(mesh, chosen_material)
 
     def light(

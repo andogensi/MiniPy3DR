@@ -76,11 +76,16 @@ def flat_shade_prepared(
     normal_y *= normal_scale
     normal_z *= normal_scale
 
-    ambient = _clamp(material.ambient, 0.0, 1.0)
+    ambient = material.ambient
+    if ambient < 0.0:
+        ambient = 0.0
+    elif ambient > 1.0:
+        ambient = 1.0
     diffuse_scale = 1.0 - ambient
-    red = material.color[0] * ambient
-    green = material.color[1] * ambient
-    blue = material.color[2] * ambient
+    material_red, material_green, material_blue = material.color
+    red = material_red * ambient
+    green = material_green * ambient
+    blue = material_blue * ambient
 
     for light in lights:
         strength = max(
@@ -93,11 +98,32 @@ def flat_shade_prepared(
             continue
 
         lit = diffuse_scale * strength
-        red += material.color[0] * lit * light.color_scale[0]
-        green += material.color[1] * lit * light.color_scale[1]
-        blue += material.color[2] * lit * light.color_scale[2]
+        red += material_red * lit * light.color_scale[0]
+        green += material_green * lit * light.color_scale[1]
+        blue += material_blue * lit * light.color_scale[2]
 
-    return (_clamp_channel(red), _clamp_channel(green), _clamp_channel(blue))
+    if red < 0.0:
+        red_channel = 0
+    elif red > 255.0:
+        red_channel = 255
+    else:
+        red_channel = int(round(red))
+
+    if green < 0.0:
+        green_channel = 0
+    elif green > 255.0:
+        green_channel = 255
+    else:
+        green_channel = int(round(green))
+
+    if blue < 0.0:
+        blue_channel = 0
+    elif blue > 255.0:
+        blue_channel = 255
+    else:
+        blue_channel = int(round(blue))
+
+    return (red_channel, green_channel, blue_channel)
 
 
 def _clamp(value: float, low: float, high: float) -> float:

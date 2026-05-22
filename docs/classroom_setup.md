@@ -10,10 +10,22 @@ GitHub に公開したリポジトリから入れる場合は、次を 1 回だ�
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 ```
 
+`uv` を使う場合:
+
+```powershell
+uv pip install "git+https://github.com/andogensi/MiniPy3DR.git"
+```
+
 バージョンを固定したい場合は、タグを付けてから次のようにします。
 
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.3.0"
+```
+
+`uv` を使う場合:
+
+```powershell
+uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.3.0"
 ```
 
 ## ローカル開発時の準備
@@ -28,6 +40,12 @@ cd D:\Private_D\PROJECT\MiniPy3DR
 
 ```powershell
 python -m pip install -e .
+```
+
+`uv` を使う場合:
+
+```powershell
+uv pip install -e .
 ```
 
 成功すると、どのサンプルからでも次の import が使えます。

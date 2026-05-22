@@ -2,7 +2,17 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from minipy3dr import App, KeyboardCameraController, MiniPy3DRApp, Vector3, key_code_from_name, vec3
+from minipy3dr import (
+    App,
+    KeyboardCameraController,
+    Material,
+    Mesh,
+    MiniPy3DRApp,
+    Scene,
+    Vector3,
+    key_code_from_name,
+    vec3,
+)
 
 
 def test_high_level_api_exports_from_top_level_package() -> None:
@@ -23,3 +33,15 @@ def test_key_code_from_name_accepts_beginner_aliases() -> None:
     assert key_code_from_name(pygame, "left") == 1
     assert key_code_from_name(pygame, "esc") == 2
     assert key_code_from_name(pygame, "space") == 3
+
+
+def test_scene_remove_deletes_mesh_by_identity() -> None:
+    scene = Scene()
+    first = scene.add(Mesh.cube(), Material(color=(255, 0, 0)))
+    second = scene.add(Mesh.cube(), Material(color=(0, 255, 0)))
+
+    assert scene.remove(Mesh.cube()) is False
+    assert scene.objects == (first, second)
+
+    assert scene.remove(first) is True
+    assert scene.objects == (second,)

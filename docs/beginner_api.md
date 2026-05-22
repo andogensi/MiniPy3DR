@@ -102,6 +102,23 @@ def update(app, delta):
     app.move(cube, x=speed * delta)
 ```
 
+## 消す
+
+弾や敵のように、途中でいらなくなるものは `app.remove(mesh)` で消せます。
+消せたときは `True`、すでに消えているときは `False` が返ります。
+
+```python
+bullets = []
+
+
+def update(app, delta):
+    for bullet in bullets[:]:
+        app.move(bullet, z=-20 * delta)
+        if bullet.position.z < -50:
+            app.remove(bullet)
+            bullets.remove(bullet)
+```
+
 ## 回す
 
 ```python

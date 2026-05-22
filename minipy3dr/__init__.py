@@ -2,6 +2,7 @@
 
 from minipy3dr.app import AppFrame, MiniPy3DRApp, key_code_from_name, vec3
 from minipy3dr.core import DirectionalLight, Material, Mesh, PerspectiveCamera, Scene
+from minipy3dr.loaders import ObjLoadError, load_obj, loads_obj
 from minipy3dr.math import Matrix4, Transform, Vector2, Vector3, Vector4
 from minipy3dr.pygame import KeyboardCameraController
 from minipy3dr.render import Renderer
@@ -19,6 +20,7 @@ __all__ = [
     "Material",
     "Mesh",
     "MiniPy3DRApp",
+    "ObjLoadError",
     "PerspectiveCamera",
     "Renderer",
     "Scene",
@@ -27,5 +29,7 @@ __all__ = [
     "Vector3",
     "Vector4",
     "key_code_from_name",
+    "load_obj",
+    "loads_obj",
     "vec3",
 ]

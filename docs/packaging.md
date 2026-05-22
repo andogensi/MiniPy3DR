@@ -10,10 +10,22 @@ After pushing the repository to GitHub, users can install it directly:
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 ```
 
+With uv:
+
+```powershell
+uv pip install "git+https://github.com/andogensi/MiniPy3DR.git"
+```
+
 Install a branch:
 
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
+```
+
+With uv:
+
+```powershell
+uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 ```
 
 Install a version tag:
@@ -57,6 +69,12 @@ Use this while editing the library or examples:
 python -m pip install -e .
 ```
 
+With uv:
+
+```powershell
+uv pip install -e .
+```
+
 If Pygame and NumPy are already installed and the classroom has no network, use:
 
 ```powershell
@@ -68,6 +86,13 @@ python -m pip install -e . --no-deps
 ```powershell
 python -m pip install -e ".[dev]"
 python -m build
+```
+
+With uv:
+
+```powershell
+uv pip install -e ".[dev]"
+uv run python -m build
 ```
 
 For a quick wheel build without installing extra build tools:

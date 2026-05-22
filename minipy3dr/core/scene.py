@@ -26,6 +26,13 @@ class Scene:
         self._items.append(SceneItem(mesh, chosen_material))
         return mesh
 
+    def remove(self, mesh: Mesh) -> bool:
+        for index, item in enumerate(self._items):
+            if item.mesh is mesh:
+                del self._items[index]
+                return True
+        return False
+
     def add_light(self, light: DirectionalLight) -> DirectionalLight:
         self._lights.append(light)
         return light

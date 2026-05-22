@@ -1,39 +1,51 @@
-# Python bytecode
+# Python bytecode and caches
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
 
 # Virtual environments
 .venv/
 venv/
+env/
 ENV/
 
-# Build artifacts
+# Build and packaging output
 build/
 dist/
 *.egg-info/
 .eggs/
+*.egg
 
-# Test and coverage
-.pytest_cache/
+# Test and coverage output
 .coverage
+.coverage.*
 coverage.xml
 htmlcov/
 
-# Type checker and lint caches
-.mypy_cache/
-.pytype/
-.ruff_cache/
+# Local environment and secrets
+.env
+.env.*
+!.env.example
 
-# Logs and temp files
+# Logs and temporary files
 *.log
 *.tmp
+*.temp
 
-# IDE/editor
-.vscode/
+# IDE and editor settings
 .idea/
+.vscode/
+.vs/
 
 # OS files
 .DS_Store
 Thumbs.db
+Desktop.ini
+
+# Project-local private notes
 docs/design.md

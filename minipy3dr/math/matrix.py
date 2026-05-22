@@ -22,22 +22,52 @@ class Matrix4:
             raise ValueError("Matrix4 requires exactly 4 rows of 4 values")
         object.__setattr__(self, "rows", normalized)
 
+    @staticmethod
+    def _from_rows(rows: Rows) -> Matrix4:
+        matrix = Matrix4.__new__(Matrix4)
+        object.__setattr__(matrix, "rows", rows)
+        return matrix
+
     def __matmul__(self, other: Matrix4 | Vector4) -> Matrix4 | Vector4:
         if isinstance(other, Matrix4):
-            return Matrix4(
+            a0, a1, a2, a3 = self.rows
+            b0, b1, b2, b3 = other.rows
+            return Matrix4._from_rows(
                 (
                     (
-                        sum(self.rows[row][k] * other.rows[k][col] for k in range(4))
-                        for col in range(4)
-                    )
-                    for row in range(4)
+                        a0[0] * b0[0] + a0[1] * b1[0] + a0[2] * b2[0] + a0[3] * b3[0],
+                        a0[0] * b0[1] + a0[1] * b1[1] + a0[2] * b2[1] + a0[3] * b3[1],
+                        a0[0] * b0[2] + a0[1] * b1[2] + a0[2] * b2[2] + a0[3] * b3[2],
+                        a0[0] * b0[3] + a0[1] * b1[3] + a0[2] * b2[3] + a0[3] * b3[3],
+                    ),
+                    (
+                        a1[0] * b0[0] + a1[1] * b1[0] + a1[2] * b2[0] + a1[3] * b3[0],
+                        a1[0] * b0[1] + a1[1] * b1[1] + a1[2] * b2[1] + a1[3] * b3[1],
+                        a1[0] * b0[2] + a1[1] * b1[2] + a1[2] * b2[2] + a1[3] * b3[2],
+                        a1[0] * b0[3] + a1[1] * b1[3] + a1[2] * b2[3] + a1[3] * b3[3],
+                    ),
+                    (
+                        a2[0] * b0[0] + a2[1] * b1[0] + a2[2] * b2[0] + a2[3] * b3[0],
+                        a2[0] * b0[1] + a2[1] * b1[1] + a2[2] * b2[1] + a2[3] * b3[1],
+                        a2[0] * b0[2] + a2[1] * b1[2] + a2[2] * b2[2] + a2[3] * b3[2],
+                        a2[0] * b0[3] + a2[1] * b1[3] + a2[2] * b2[3] + a2[3] * b3[3],
+                    ),
+                    (
+                        a3[0] * b0[0] + a3[1] * b1[0] + a3[2] * b2[0] + a3[3] * b3[0],
+                        a3[0] * b0[1] + a3[1] * b1[1] + a3[2] * b2[1] + a3[3] * b3[1],
+                        a3[0] * b0[2] + a3[1] * b1[2] + a3[2] * b2[2] + a3[3] * b3[2],
+                        a3[0] * b0[3] + a3[1] * b1[3] + a3[2] * b2[3] + a3[3] * b3[3],
+                    ),
                 )
             )
         if isinstance(other, Vector4):
-            x, y, z, w = other.as_tuple()
-            values = (x, y, z, w)
+            x, y, z, w = other.x, other.y, other.z, other.w
+            row_0, row_1, row_2, row_3 = self.rows
             return Vector4(
-                *(sum(self.rows[row][col] * values[col] for col in range(4)) for row in range(4))
+                row_0[0] * x + row_0[1] * y + row_0[2] * z + row_0[3] * w,
+                row_1[0] * x + row_1[1] * y + row_1[2] * z + row_1[3] * w,
+                row_2[0] * x + row_2[1] * y + row_2[2] * z + row_2[3] * w,
+                row_3[0] * x + row_3[1] * y + row_3[2] * z + row_3[3] * w,
             )
         return NotImplemented
 
@@ -142,11 +172,22 @@ class Matrix4:
         )
 
     def transform_point(self, point: Vector3) -> Vector3:
-        result = self @ Vector4(point.x, point.y, point.z, 1.0)
-        if result.w != 0 and result.w != 1:
-            return Vector3(result.x / result.w, result.y / result.w, result.z / result.w)
-        return Vector3(result.x, result.y, result.z)
+        x, y, z = point.x, point.y, point.z
+        row_0, row_1, row_2, row_3 = self.rows
+        result_x = row_0[0] * x + row_0[1] * y + row_0[2] * z + row_0[3]
+        result_y = row_1[0] * x + row_1[1] * y + row_1[2] * z + row_1[3]
+        result_z = row_2[0] * x + row_2[1] * y + row_2[2] * z + row_2[3]
+        result_w = row_3[0] * x + row_3[1] * y + row_3[2] * z + row_3[3]
+        if result_w != 0 and result_w != 1:
+            inv_w = 1.0 / result_w
+            return Vector3(result_x * inv_w, result_y * inv_w, result_z * inv_w)
+        return Vector3(result_x, result_y, result_z)
 
     def transform_direction(self, direction: Vector3) -> Vector3:
-        result = self @ Vector4(direction.x, direction.y, direction.z, 0.0)
-        return Vector3(result.x, result.y, result.z)
+        x, y, z = direction.x, direction.y, direction.z
+        row_0, row_1, row_2 = self.rows[0], self.rows[1], self.rows[2]
+        return Vector3(
+            row_0[0] * x + row_0[1] * y + row_0[2] * z,
+            row_1[0] * x + row_1[1] * y + row_1[2] * z,
+            row_2[0] * x + row_2[1] * y + row_2[2] * z,
+        )

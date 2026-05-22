@@ -12,6 +12,12 @@ From GitHub:
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 ```
 
+With uv:
+
+```powershell
+uv pip install "git+https://github.com/andogensi/MiniPy3DR.git"
+```
+
 From a specific branch or tag:
 
 ```powershell
@@ -29,6 +35,12 @@ For classroom development, use editable install:
 
 ```powershell
 python -m pip install -e .
+```
+
+or with uv:
+
+```powershell
+uv pip install -e .
 ```
 
 After that, student files can simply import the beginner API:
@@ -52,6 +64,31 @@ def update(app, delta):
 
 
 app.run(update=update)
+```
+
+## Load OBJ Meshes
+
+```python
+from minipy3dr import App
+
+app = App(title="OBJ demo")
+model = app.obj("assets/model.obj", position=(0, 0, -6), color=(160, 210, 255))
+app.light(direction=(-0.4, -0.8, -0.6))
+
+
+def update(app, delta):
+    app.rotate(model, y=delta)
+
+
+app.run(update=update)
+```
+
+For lower-level code, use `load_obj(path)` to get a `Mesh`:
+
+```python
+from minipy3dr import load_obj
+
+mesh = load_obj("assets/model.obj")
 ```
 
 ## Run the Demo
@@ -79,6 +116,13 @@ minipy3dr-demo
 ```powershell
 python -m pip install -e ".[dev]"
 python -m build
+```
+
+With uv:
+
+```powershell
+uv pip install -e ".[dev]"
+uv run python -m build
 ```
 
 The wheel and source archive will be written to `dist/`.
