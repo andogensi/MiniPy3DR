@@ -30,6 +30,10 @@ BULLET_SPEED = 21.0
 MAX_HEALTH = 100
 MAX_AMMO = 70
 EXPLOSION_RADIUS = 3.2
+BASE_PITCH = -0.035
+MOUSE_SENSITIVITY = 0.003
+MOUSE_PITCH_MIN = -0.42
+MOUSE_PITCH_MAX = 0.36
 
 MAP = [
     "##############",
@@ -169,6 +173,7 @@ barrels: list[Barrel] = []
 enemies: list[Enemy] = []
 
 player_yaw = 0.0
+player_pitch = BASE_PITCH
 health = MAX_HEALTH
 ammo = 34
 score = 0
@@ -296,7 +301,7 @@ def build_world() -> None:
 
             if cell == "P":
                 app.camera.position = Vector3(x, EYE_Y, z)
-                app.camera.rotation = Vector3(-0.035, player_yaw, 0)
+                app.camera.rotation = Vector3(player_pitch, player_yaw, 0)
             elif cell == "E":
                 create_enemy(x, z)
             elif cell == "H":
@@ -496,11 +501,24 @@ def explode_barrel(barrel: Barrel) -> None:
     victory = not enemies
 
 
+def enable_mouse_look() -> None:
+    app.pygame.mouse.set_visible(False)
+    app.pygame.event.set_grab(True)
+    app.pygame.mouse.get_rel()
+
+
 def update_player(delta: float) -> None:
-    global player_yaw, bob_time
+    global player_yaw, player_pitch, bob_time
 
     turn_speed = 2.65
     move_speed = 4.35
+    mouse_dx, mouse_dy = app.pygame.mouse.get_rel()
+    player_yaw -= mouse_dx * MOUSE_SENSITIVITY
+    player_pitch = max(
+        MOUSE_PITCH_MIN,
+        min(MOUSE_PITCH_MAX, player_pitch - mouse_dy * MOUSE_SENSITIVITY),
+    )
+
     if app.key("left") or app.key("q"):
         player_yaw += turn_speed * delta
     if app.key("right") or app.key("e"):
@@ -531,7 +549,7 @@ def update_player(delta: float) -> None:
     try_move_player(dx, dz)
     bob = math.sin(bob_time) * 0.045 if moving else math.sin(bob_time) * 0.012
     app.camera.position = Vector3(app.camera.position.x, EYE_Y + bob, app.camera.position.z)
-    pitch = -0.035 + math.sin(bob_time * 0.5) * 0.008 + damage_flash * 0.025
+    pitch = player_pitch + math.sin(bob_time * 0.5) * 0.008 + damage_flash * 0.025
     app.camera.rotation = Vector3(pitch, player_yaw, 0.0)
 
 
@@ -802,7 +820,7 @@ def overlay(app: App) -> None:
         draw_centered("NO AMMO", cy + 52, 24, (255, 94, 72))
 
     draw_minimap()
-    app.draw_text("WASD move  Q/E turn  SPACE fire  barrels explode", (22, height - 34), color=(150, 160, 172), size=20)
+    app.draw_text("WASD move  mouse/Q/E look  SPACE/click fire  barrels explode", (22, height - 34), color=(150, 160, 172), size=20)
 
     if victory:
         draw_centered("AREA CLEAR", height // 2 - 46, 56, (255, 228, 90))
@@ -815,4 +833,5 @@ def overlay(app: App) -> None:
 build_world()
 
 if __name__ == "__main__":
+    enable_mouse_look()
     app.run(update=update, overlay=overlay)

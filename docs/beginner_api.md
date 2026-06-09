@@ -86,6 +86,40 @@ cube = app.cube(
 - `color=(r, g, b)`: 色。0 から 255
 - `ambient=0.2`: 影の明るさ
 
+## 箱・球・床・壁を作る
+
+`cube` は正方形の箱、`box` は横・縦・奥行きを指定する箱です。
+
+```python
+player = app.box(position=(0, 0, -5), size=(1, 2, 1), color=(80, 200, 255))
+coin = app.sphere(position=(2, 0, -5), radius=0.35, color=(255, 220, 80))
+floor = app.floor(position=(0, -1.5, -5), width=8, depth=8)
+wall = app.wall(position=(0, 0, -9), width=8, height=3)
+```
+
+よく使うゲーム用オブジェクトは `actor` にすると、オブジェクト自身に対して動かせます。
+
+```python
+player = app.actor("player", position=(0, 0, -5), size=(1, 2, 1), color=(80, 200, 255))
+
+
+def update(app, delta):
+    player.move(x=2 * delta)
+    player.rotate(y=delta)
+```
+
+複数のパーツを 1 つとして扱いたいときは `group` を使います。
+
+```python
+body = app.box(position=(0, 0, -5), size=(1, 1, 1), color=(80, 200, 255))
+head = app.sphere(position=(0, 0.9, -5), radius=0.35, color=(240, 220, 180))
+player = app.group(body, head, name="player")
+
+player.move(x=1)
+player.hide()
+player.show()
+```
+
 ## 動かす
 
 ```python
@@ -101,6 +135,8 @@ def update(app, delta):
     speed = 2.5
     app.move(cube, x=speed * delta)
 ```
+
+`actor` や `group` も同じように `app.move(player, x=...)` で動かせます。
 
 ## 消す
 
@@ -118,6 +154,8 @@ def update(app, delta):
             app.remove(bullet)
             bullets.remove(bullet)
 ```
+
+`actor` や `group` なら `player.remove()` でも消せます。
 
 ## 回す
 
@@ -150,6 +188,23 @@ def update(app, delta):
 - `"w"`, `"a"`, `"s"`, `"d"`
 - `"space"`
 - `"escape"`
+
+## 当たり判定と距離
+
+ミニゲームでは `app.overlaps(a, b)` で簡単な当たり判定ができます。
+回転は考えない、軽い箱判定です。
+
+```python
+if app.overlaps(player, coin):
+    coin.set_position((random.uniform(-3, 3), 0, -5))
+```
+
+距離を知りたいときは `app.distance(a, b)` を使います。
+
+```python
+if app.distance(player, coin) < 1.0:
+    score += 1
+```
 
 ## 文字を出す
 

@@ -33,6 +33,14 @@ class Scene:
                 return True
         return False
 
+    def set_material(self, mesh: Mesh, material: Material) -> bool:
+        mesh.material = material
+        for item in self._items:
+            if item.mesh is mesh:
+                item.material = material
+                return True
+        return False
+
     def add_light(self, light: DirectionalLight) -> DirectionalLight:
         self._lights.append(light)
         return light
