@@ -120,6 +120,36 @@ def test_numpy_solid_render_changes_pixels() -> None:
     assert surface.get_at((48, 48)) != (*renderer.background, 255)
 
 
+def test_native_solid_path_uses_one_scene_render_call() -> None:
+    class NativeBufferSpy:
+        def __init__(self) -> None:
+            self.render_scene_calls = 0
+            self.clear_calls = 0
+            self.blit_calls = 0
+
+        def clear(self, background: tuple[int, int, int]) -> None:
+            del background
+            self.clear_calls += 1
+
+        def render_scene(self, *args: object) -> None:
+            self.render_scene_calls += 1
+            assert len(args) == 15
+
+        def blit_to_surface(self, target: object) -> None:
+            del target
+            self.blit_calls += 1
+
+    renderer = Renderer((96, 96))
+    renderer.native_buffer = NativeBufferSpy()  # type: ignore[assignment]
+    scene, camera = make_cube_scene()
+
+    renderer.draw_solid_native(scene, camera, object())
+
+    assert renderer.native_buffer.render_scene_calls == 1  # type: ignore[union-attr]
+    assert renderer.native_buffer.clear_calls == 0  # type: ignore[union-attr]
+    assert renderer.native_buffer.blit_calls == 1  # type: ignore[union-attr]
+
+
 def test_renderer_culls_meshes_outside_view() -> None:
     pytest.importorskip("numpy")
     renderer = Renderer((96, 96))

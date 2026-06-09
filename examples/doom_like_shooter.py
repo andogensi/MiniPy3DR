@@ -155,7 +155,7 @@ app = App(
     title="Mini DOOM-like Shooter",
     render_scale=0.6,
     background=(8, 7, 9),
-    mode="solid_numpy",
+    mode="solid_native",
     fps=60,
     fov=78,
     near=0.05,
@@ -714,8 +714,7 @@ def update(app: App, delta: float) -> None:
 
 
 def draw_centered(text: str, y: int, size: int, color: tuple[int, int, int]) -> None:
-    font = app.pygame.font.SysFont("consolas", size, bold=True)
-    surface = font.render(text, True, color)
+    surface = app._text_surface(text, color, "consolas", size, bold=True)
     rect = surface.get_rect(center=(app.size[0] // 2, y))
     app.screen.blit(surface, rect)
 
@@ -816,6 +815,10 @@ def overlay(app: App) -> None:
     draw_bar("AMMO", ammo, MAX_AMMO, 22, 104, (76, 160, 255))
     app.draw_text(f"SCORE {score:04d}", (22, 132), color=(214, 224, 236), size=23)
     app.draw_text(f"ENEMIES {len(enemies)}", (22, 158), color=(214, 224, 236), size=21)
+    current_fps = 1.0 / app.delta if app.delta > 0 else 0.0
+    average_fps = app.frame_index / app.time if app.time > 0 else 0.0
+    app.draw_text(f"FPS {current_fps:05.1f}", (22, 184), color=(180, 218, 188), size=20, cache=False)
+    app.draw_text(f"AVG {average_fps:05.1f}", (22, 206), color=(180, 218, 188), size=20, cache=False)
     if dry_fire_timer > 0:
         draw_centered("NO AMMO", cy + 52, 24, (255, 94, 72))
 

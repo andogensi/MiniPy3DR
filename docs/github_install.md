@@ -18,7 +18,14 @@ python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 授業ではタグで固定するのがおすすめです。
 
 ```powershell
-python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.3.0"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.0"
+```
+
+Windows PC に Visual Studio Build Tools が入っていない場合は、GitHub Release の
+prebuilt wheel を使います。
+
+```powershell
+python -m pip install "https://github.com/andogensi/MiniPy3DR/releases/download/v0.4.0/minipy3dr-0.4.0-cp313-cp313-win_amd64.whl"
 ```
 
 更新したものを入れ直す場合:
@@ -36,8 +43,8 @@ git commit -m "Prepare MiniPy3DR package install"
 git branch -M main
 git remote add origin https://github.com/andogensi/MiniPy3DR.git
 git push -u origin main
-git tag v0.3.0
-git push origin v0.3.0
+git tag v0.4.0
+git push origin v0.4.0
 ```
 
 すでに remote がある場合は `git remote add origin ...` は不要です。

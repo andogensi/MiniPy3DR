@@ -3,15 +3,29 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 import math
 
 from minipy3dr.core import DirectionalLight, Material, Mesh, PerspectiveCamera, Scene
 from minipy3dr.math import Matrix4, Vector3
+from minipy3dr.render.native_rasterizer import NativeFrameBuffer, is_native_available
 from minipy3dr.render.numpy_rasterizer import NumpyFrameBuffer
 from minipy3dr.render.pipeline import ProjectedVertex
 from minipy3dr.render.rasterizer import Rasterizer
 from minipy3dr.render.shader import PreparedDirectionalLight, flat_shade_prepared, prepare_lights
 from minipy3dr.render.zbuffer import ZBuffer
+
+
+@dataclass
+class _NativeSceneCache:
+    key: tuple[object, ...]
+    vertices: object
+    faces: object
+    mesh_ranges: object
+    mesh_states: object
+    materials: object
+    lights: object
+    items: tuple[object, ...]
 
 
 class Renderer:
@@ -28,6 +42,8 @@ class Renderer:
         self.wire_color = wire_color
         self.zbuffer = ZBuffer(self.width, self.height)
         self.numpy_buffer = NumpyFrameBuffer(self.width, self.height, self.background)
+        self.native_buffer: NativeFrameBuffer | None = None
+        self._native_scene_cache: _NativeSceneCache | None = None
         self.enable_mesh_culling = True
         self.mesh_cull_distance: float | None = None
 
@@ -38,8 +54,8 @@ class Renderer:
         target: object,
         mode: str = "solid",
     ) -> None:
-        if mode not in {"solid", "solid_fast", "solid_numpy", "wireframe"}:
-            raise ValueError('mode must be "solid", "solid_fast", "solid_numpy", or "wireframe"')
+        if mode not in {"solid", "solid_fast", "solid_numpy", "solid_native", "wireframe"}:
+            raise ValueError('mode must be "solid", "solid_fast", "solid_numpy", "solid_native", or "wireframe"')
 
         if mode == "solid_fast":
             self.clear(target)
@@ -47,6 +63,9 @@ class Renderer:
             return
         if mode == "solid_numpy":
             self.draw_solid_numpy(scene, camera, target)
+            return
+        if mode == "solid_native":
+            self.draw_solid_native(scene, camera, target)
             return
 
         lock = getattr(target, "lock", None)
@@ -170,6 +189,170 @@ class Renderer:
 
     def blit_numpy_buffer(self, target: object) -> None:
         self.numpy_buffer.blit_to_surface(target)
+
+    def draw_solid_native(self, scene: Scene, camera: PerspectiveCamera, target: object) -> None:
+        self.draw_solid_native_scene(scene, camera)
+        self.blit_native_buffer(target)
+
+    def clear_native_buffer(self) -> None:
+        self._native_framebuffer().clear(self.background)
+
+    def draw_solid_native_scene(self, scene: Scene, camera: PerspectiveCamera) -> None:
+        native_buffer = self._native_framebuffer()
+        view = camera.view_matrix()
+        projection = camera.projection_matrix()
+        culling = self._mesh_culling_context(camera, view)
+        if culling is None:
+            enable_culling = False
+            cull_far = camera.far
+            vertical_tan = 0.0
+            horizontal_tan = 0.0
+        else:
+            _, _, cull_far, vertical_tan, horizontal_tan = culling
+            enable_culling = True
+
+        (
+            vertices,
+            faces,
+            mesh_ranges,
+            mesh_states,
+            materials,
+            lights,
+        ) = self._pack_native_scene(scene)
+        native_buffer.render_scene(
+            vertices,
+            faces,
+            mesh_ranges,
+            mesh_states,
+            materials,
+            lights,
+            self._matrix_to_native_array(view),
+            self._matrix_to_native_array(projection),
+            self.background,
+            camera.near,
+            camera.far,
+            cull_far,
+            vertical_tan,
+            horizontal_tan,
+            enable_culling,
+        )
+
+    def blit_native_buffer(self, target: object) -> None:
+        self._native_framebuffer().blit_to_surface(target)
+
+    def _native_framebuffer(self) -> NativeFrameBuffer:
+        if self.native_buffer is None:
+            if not is_native_available():
+                raise RuntimeError("native rasterizer is not built")
+            self.native_buffer = NativeFrameBuffer(self.width, self.height, self.background)
+        return self.native_buffer
+
+    def _pack_native_scene(self, scene: Scene) -> tuple[object, object, object, object, object, object]:
+        import numpy as np
+
+        items = tuple(item for item in scene.items if item.mesh.visible and item.mesh.vertices and item.mesh.faces)
+        key = self._native_scene_cache_key(items, scene.lights)
+        cache = self._native_scene_cache
+        if cache is None or cache.key != key:
+            vertex_count = sum(len(item.mesh.vertices) for item in items)
+            face_count = sum(len(item.mesh.faces) for item in items)
+            mesh_count = len(items)
+
+            vertices = np.empty((vertex_count, 3), dtype=np.float64)
+            faces = np.empty((face_count, 3), dtype=np.int32)
+            mesh_ranges = np.empty((mesh_count, 5), dtype=np.int32)
+            mesh_states = np.empty((mesh_count, 10), dtype=np.float64)
+            materials = np.empty((mesh_count, 4), dtype=np.float64)
+            lights = np.empty((len(scene.lights), 7), dtype=np.float64)
+
+            vertex_offset = 0
+            face_offset = 0
+            for mesh_index, item in enumerate(items):
+                mesh = item.mesh
+                for vertex_index, vertex in enumerate(mesh.vertices):
+                    vertices[vertex_offset + vertex_index] = (vertex.x, vertex.y, vertex.z)
+                for local_face_index, face in enumerate(mesh.faces):
+                    faces[face_offset + local_face_index] = face
+
+                mesh_ranges[mesh_index] = (
+                    vertex_offset,
+                    len(mesh.vertices),
+                    face_offset,
+                    len(mesh.faces),
+                    mesh_index,
+                )
+
+                vertex_offset += len(mesh.vertices)
+                face_offset += len(mesh.faces)
+
+            cache = _NativeSceneCache(
+                key=key,
+                vertices=vertices,
+                faces=faces,
+                mesh_ranges=mesh_ranges,
+                mesh_states=mesh_states,
+                materials=materials,
+                lights=lights,
+                items=items,
+            )
+            self._native_scene_cache = cache
+
+        for mesh_index, item in enumerate(cache.items):
+            mesh = item.mesh
+            material = item.material
+            cache.mesh_states[mesh_index] = (
+                mesh.position.x,
+                mesh.position.y,
+                mesh.position.z,
+                mesh.rotation.x,
+                mesh.rotation.y,
+                mesh.rotation.z,
+                mesh.scale.x,
+                mesh.scale.y,
+                mesh.scale.z,
+                self._mesh_local_radius(mesh),
+            )
+            cache.materials[mesh_index] = (
+                material.color[0],
+                material.color[1],
+                material.color[2],
+                material.ambient,
+            )
+
+        for light_index, light in enumerate(scene.lights):
+            cache.lights[light_index] = (
+                light.direction.x,
+                light.direction.y,
+                light.direction.z,
+                light.color[0],
+                light.color[1],
+                light.color[2],
+                light.intensity,
+            )
+
+        return cache.vertices, cache.faces, cache.mesh_ranges, cache.mesh_states, cache.materials, cache.lights
+
+    @staticmethod
+    def _native_scene_cache_key(items: tuple[object, ...], lights: tuple[DirectionalLight, ...]) -> tuple[object, ...]:
+        mesh_keys = tuple(
+            (
+                id(item.mesh),
+                id(item.mesh.vertices),
+                len(item.mesh.vertices),
+                id(item.mesh.faces),
+                len(item.mesh.faces),
+                id(item.material),
+            )
+            for item in items
+        )
+        light_keys = tuple(id(light) for light in lights)
+        return mesh_keys, light_keys
+
+    @staticmethod
+    def _matrix_to_native_array(matrix: Matrix4) -> object:
+        import numpy as np
+
+        return np.asarray(matrix.rows, dtype=np.float64).reshape(16)
 
     def clear(self, target: object) -> None:
         if hasattr(target, "fill"):
@@ -336,14 +519,18 @@ class Renderer:
 
     @staticmethod
     def _mesh_world_radius(mesh: Mesh) -> float:
+        local_radius_sq = Renderer._mesh_local_radius(mesh) ** 2
+        scale = max(abs(mesh.scale.x), abs(mesh.scale.y), abs(mesh.scale.z))
+        return math.sqrt(local_radius_sq) * scale
+
+    @staticmethod
+    def _mesh_local_radius(mesh: Mesh) -> float:
         local_radius_sq = 0.0
         for vertex in mesh.vertices:
             radius_sq = vertex.x * vertex.x + vertex.y * vertex.y + vertex.z * vertex.z
             if radius_sq > local_radius_sq:
                 local_radius_sq = radius_sq
-
-        scale = max(abs(mesh.scale.x), abs(mesh.scale.y), abs(mesh.scale.z))
-        return math.sqrt(local_radius_sq) * scale
+        return math.sqrt(local_radius_sq)
 
     @staticmethod
     def _transform_position_to_view(position: Vector3, view: Matrix4) -> tuple[float, float, float]:

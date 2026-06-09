@@ -197,6 +197,8 @@ class MiniPy3DRApp:
         self.time = 0.0
         self.frame_index = 0
         self._keys: object | None = None
+        self._font_cache: dict[tuple[str, int, bool], object] = {}
+        self._text_cache: dict[tuple[str, tuple[int, int, int], str, int, bool], object] = {}
 
     @property
     def frame(self) -> AppFrame:
@@ -450,9 +452,38 @@ class MiniPy3DRApp:
         position: tuple[int, int] = (20, 20),
         color: tuple[int, int, int] = (240, 244, 255),
         size: int = 28,
+        cache: bool = True,
     ) -> None:
-        font = self.pygame.font.SysFont("consolas", size)
-        self.screen.blit(font.render(text, True, color), position)
+        if cache:
+            surface = self._text_surface(text, color, "consolas", size)
+        else:
+            surface = self._font("consolas", size).render(text, True, color)
+        self.screen.blit(surface, position)
+
+    def _font(self, name: str, size: int, bold: bool = False) -> object:
+        key = (name, size, bold)
+        font = self._font_cache.get(key)
+        if font is None:
+            font = self.pygame.font.SysFont(name, size, bold=bold)
+            self._font_cache[key] = font
+        return font
+
+    def _text_surface(
+        self,
+        text: str,
+        color: tuple[int, int, int],
+        font_name: str,
+        size: int,
+        bold: bool = False,
+    ) -> object:
+        key = (text, color, font_name, size, bold)
+        surface = self._text_cache.get(key)
+        if surface is None:
+            if len(self._text_cache) > 512:
+                self._text_cache.clear()
+            surface = self._font(font_name, size, bold).render(text, True, color)
+            self._text_cache[key] = surface
+        return surface
 
     def render(self) -> None:
         self.render_scene(self.scene)

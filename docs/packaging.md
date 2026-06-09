@@ -31,7 +31,7 @@ uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 Install a version tag:
 
 ```powershell
-python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.3.0"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.0"
 ```
 
 Force reinstall after pushing changes:
@@ -51,9 +51,13 @@ git commit -m "Prepare MiniPy3DR package install"
 git branch -M main
 git remote add origin https://github.com/andogensi/MiniPy3DR.git
 git push -u origin main
-git tag v0.3.0
-git push origin v0.3.0
+git tag v0.4.0
+git push origin v0.4.0
 ```
+
+Tag pushes run the `Build wheels` GitHub Actions workflow. Windows wheels for
+Python 3.10 through 3.13 are attached to the Release and include the native C++
+renderer.
 
 ## Local install
 

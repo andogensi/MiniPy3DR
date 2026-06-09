@@ -17,9 +17,20 @@ ENV/
 # Build and packaging output
 build/
 dist/
+wheelhouse/
 *.egg-info/
 .eggs/
 *.egg
+pip-wheel-metadata/
+
+# Native extension build artifacts
+*.pyd
+*.so
+*.dll
+*.dylib
+*.lib
+*.obj
+*.o
 
 # Test and coverage output
 .coverage
@@ -36,6 +47,9 @@ htmlcov/
 *.log
 *.tmp
 *.temp
+.tmp*/
+benchmark_results*.csv
+benchmark_results*.json
 
 # IDE and editor settings
 .idea/
