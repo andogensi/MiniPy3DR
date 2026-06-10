@@ -14,7 +14,7 @@ python -m pip install minipy3dr
 To pin a class to one release:
 
 ```powershell
-python -m pip install "minipy3dr==0.4.0"
+python -m pip install "minipy3dr==0.4.1"
 ```
 
 pip selects the matching `cp310`, `cp311`, `cp312`, or `cp313` `win_amd64`
@@ -52,7 +52,7 @@ uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 Install a version tag:
 
 ```powershell
-python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.0"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.1"
 ```
 
 Force reinstall after pushing changes:
@@ -84,8 +84,8 @@ git commit -m "Prepare MiniPy3DR release"
 git branch -M main
 git remote add origin https://github.com/andogensi/MiniPy3DR.git
 git push -u origin main
-git tag v0.4.0
-git push origin v0.4.0
+git tag v0.4.1
+git push origin v0.4.1
 ```
 
 Tag pushes run the `Build and publish package` GitHub Actions workflow. Windows
