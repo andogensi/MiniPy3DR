@@ -11,7 +11,7 @@ uv pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 タグで固定する場合:
 
 ```powershell
-uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.1"
+uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.2"
 ```
 
 ## ローカル開発

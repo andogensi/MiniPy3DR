@@ -18,7 +18,7 @@ This installs the matching prebuilt Windows wheel from PyPI for 64-bit Python
 To pin a specific version for a class:
 
 ```powershell
-python -m pip install "minipy3dr==0.4.1"
+python -m pip install "minipy3dr==0.4.2"
 ```
 
 Check that the native renderer is available:
@@ -51,7 +51,7 @@ From a specific branch or tag:
 
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
-python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.1"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.2"
 ```
 
 From this repository:
@@ -204,9 +204,9 @@ To publish a new version, update the version in `pyproject.toml` and
 `minipy3dr/__init__.py`, then push a tag:
 
 ```powershell
-git tag v0.4.1
+git tag v0.4.2
 git push origin main
-git push origin v0.4.1
+git push origin v0.4.2
 ```
 
 The `Build and publish package` workflow uploads `cp310`, `cp311`, `cp312`, and

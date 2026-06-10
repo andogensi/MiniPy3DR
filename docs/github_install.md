@@ -17,7 +17,7 @@ pip が今使っている 64-bit Python に合う Windows wheel を PyPI から
 授業でバージョンを固定する場合:
 
 ```powershell
-python -m pip install "minipy3dr==0.4.1"
+python -m pip install "minipy3dr==0.4.2"
 ```
 
 native renderer の確認:
@@ -45,7 +45,7 @@ python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 タグで固定する場合:
 
 ```powershell
-python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.1"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.2"
 ```
 
 更新したものを入れ直す場合:
@@ -75,8 +75,8 @@ git commit -m "Prepare MiniPy3DR release"
 git branch -M main
 git remote add origin https://github.com/andogensi/MiniPy3DR.git
 git push -u origin main
-git tag v0.4.1
-git push origin v0.4.1
+git tag v0.4.2
+git push origin v0.4.2
 ```
 
 すでに remote がある場合は `git remote add origin ...` は不要です。

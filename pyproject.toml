@@ -1,12 +1,14 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "minipy3dr"
-version = "0.4.1"
+version = "0.4.2"
 description = "A small software 3D renderer for pygame surfaces."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 keywords = ["pygame", "3d", "renderer", "education", "software-renderer"]
 authors = [

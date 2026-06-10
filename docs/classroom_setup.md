@@ -20,7 +20,7 @@ C++ コンパイラは不要です。
 バージョンを固定したい授業では、`==` で指定します。
 
 ```powershell
-python -m pip install "minipy3dr==0.4.1"
+python -m pip install "minipy3dr==0.4.2"
 ```
 
 native renderer が入っているか確認します。
@@ -48,8 +48,8 @@ uv pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 タグで固定する場合:
 
 ```powershell
-python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.1"
-uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.1"
+python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.2"
+uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.2"
 ```
 
 ## ローカル開発時の準備
