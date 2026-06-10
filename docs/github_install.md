@@ -1,9 +1,36 @@
-# GitHub から pip install する方法
+# PyPI と GitHub からインストールする方法
+
+MiniPy3DR は C++ の native renderer を持っています。
+生徒 PC に Visual Studio Build Tools が入っていない想定なら、
+GitHub のソースを直接 `pip install` するのではなく、PyPI の
+prebuilt wheel を標準にします。
+
+## 生徒側: PyPI から入れる
+
+```powershell
+python -m pip install minipy3dr
+```
+
+pip が今使っている 64-bit Python に合う Windows wheel を PyPI から
+選びます。native renderer も入るので、C++ コンパイラは不要です。
+
+授業でバージョンを固定する場合:
+
+```powershell
+python -m pip install "minipy3dr==0.4.0"
+```
+
+native renderer の確認:
+
+```powershell
+python -c "from minipy3dr.render import is_native_available; print(is_native_available())"
+```
+
+## 先生側: GitHub のソースから入れる
 
 MiniPy3DR は `pyproject.toml` を持っているので、GitHub に push すれば
-そのまま `pip install` できます。
-
-## インストールする側
+ソースから直接 `pip install` できます。ただし、この方法は C++ 拡張を
+ローカル PC でビルドしようとします。
 
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
@@ -15,17 +42,10 @@ python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 ```
 
-授業ではタグで固定するのがおすすめです。
+タグで固定する場合:
 
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.0"
-```
-
-Windows PC に Visual Studio Build Tools が入っていない場合は、GitHub Release の
-prebuilt wheel を使います。
-
-```powershell
-python -m pip install "https://github.com/andogensi/MiniPy3DR/releases/download/v0.4.0/minipy3dr-0.4.0-cp313-cp313-win_amd64.whl"
 ```
 
 更新したものを入れ直す場合:
@@ -34,12 +54,24 @@ python -m pip install "https://github.com/andogensi/MiniPy3DR/releases/download/
 python -m pip install --upgrade --force-reinstall "git+https://github.com/andogensi/MiniPy3DR.git@main"
 ```
 
-## 先生側: GitHub に置く手順
+## 先生側: PyPI に公開する手順
+
+初回公開前に、PyPI で trusted publisher または pending publisher を設定します。
+
+- PyPI project name: `minipy3dr`
+- Owner: `andogensi`
+- Repository: `MiniPy3DR`
+- Workflow: `wheels.yml`
+- Environment: `pypi`
+
+公開する前に `pyproject.toml` と `minipy3dr/__init__.py` のバージョンを合わせます。
+タグを push すると GitHub Actions が Windows wheel と source distribution を
+PyPI にアップロードします。
 
 ```powershell
 git status
 git add .
-git commit -m "Prepare MiniPy3DR package install"
+git commit -m "Prepare MiniPy3DR release"
 git branch -M main
 git remote add origin https://github.com/andogensi/MiniPy3DR.git
 git push -u origin main
@@ -54,7 +86,7 @@ git push origin v0.4.0
 別フォルダで次を実行します。
 
 ```powershell
-python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
+python -m pip install minipy3dr
 python -c "from minipy3dr import App; print(App)"
 ```
 
@@ -62,5 +94,5 @@ python -c "from minipy3dr import App; print(App)"
 
 ## 注意
 
-GitHub からインストールされるのは push 済みの内容だけです。
+PyPI からインストールされるのは公開済みのバージョンだけです。
 ローカルで編集しただけのファイルは、生徒の PC には入りません。

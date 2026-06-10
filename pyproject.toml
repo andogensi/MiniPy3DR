@@ -31,9 +31,15 @@ dependencies = [
     "pygame>=2.5",
 ]
 
+[project.urls]
+Homepage = "https://github.com/andogensi/MiniPy3DR"
+Repository = "https://github.com/andogensi/MiniPy3DR"
+Issues = "https://github.com/andogensi/MiniPy3DR/issues"
+
 [project.optional-dependencies]
 dev = [
     "build>=1",
+    "cibuildwheel>=2",
     "pytest>=8",
     "twine>=5",
 ]

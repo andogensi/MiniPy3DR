@@ -6,7 +6,36 @@ the basics of cameras, meshes, lights, flat shading, and z-buffer rendering.
 
 ## Install
 
-From GitHub:
+Recommended for Windows classroom PCs:
+
+```powershell
+python -m pip install minipy3dr
+```
+
+This installs the matching prebuilt Windows wheel from PyPI for 64-bit Python
+3.10, 3.11, 3.12, or 3.13. Students do not need Visual Studio Build Tools.
+
+To pin a specific version for a class:
+
+```powershell
+python -m pip install "minipy3dr==0.4.0"
+```
+
+Check that the native renderer is available:
+
+```powershell
+python -c "from minipy3dr.render import is_native_available; print(is_native_available())"
+```
+
+With uv:
+
+```powershell
+uv pip install minipy3dr
+```
+
+Installing from GitHub source is useful for teachers and development, but it is
+not the recommended classroom default because pip builds the C++ extension on
+the local PC:
 
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
@@ -23,21 +52,6 @@ From a specific branch or tag:
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@main"
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.0"
-```
-
-On Windows classroom PCs without C++ build tools, install a prebuilt wheel from
-the GitHub Release page instead of installing from source. Pick the wheel that
-matches the Python version:
-
-```powershell
-# Python 3.13 example
-python -m pip install "https://github.com/andogensi/MiniPy3DR/releases/download/v0.4.0/minipy3dr-0.4.0-cp313-cp313-win_amd64.whl"
-```
-
-Check that the native renderer is available:
-
-```powershell
-python -c "from minipy3dr.render import is_native_available; print(is_native_available())"
 ```
 
 From this repository:
@@ -179,9 +193,15 @@ uv run python -m build
 
 The wheel and source archive will be written to `dist/`.
 
-## Release Wheels
+## Publish to PyPI
 
-Windows wheels are built by GitHub Actions. To publish a new version:
+Windows wheels are built by GitHub Actions and published to PyPI on version
+tags. Before the first release, configure a PyPI trusted publisher or pending
+publisher for repository `andogensi/MiniPy3DR`, workflow `wheels.yml`, and
+environment `pypi`.
+
+To publish a new version, update the version in `pyproject.toml` and
+`minipy3dr/__init__.py`, then push a tag:
 
 ```powershell
 git tag v0.4.0
@@ -189,6 +209,12 @@ git push origin main
 git push origin v0.4.0
 ```
 
-The `Build wheels` workflow attaches `cp310`, `cp311`, `cp312`, and `cp313`
-Windows `win_amd64` wheels to the GitHub Release. Those wheels include the C++
-native renderer, so students do not need Visual Studio Build Tools.
+The `Build and publish package` workflow uploads `cp310`, `cp311`, `cp312`, and
+`cp313` Windows `win_amd64` wheels plus the source distribution to PyPI. Those
+wheels include the C++ native renderer, so students can use `pip install
+minipy3dr` without Visual Studio Build Tools.
+
+The workflow uses PyPI trusted publishing with the `pypi` GitHub Environment.
+It sets `MINIPY3DR_REQUIRE_NATIVE=1`, so PyPI wheels fail to build if the native
+extension is missing. Source installs keep the extension optional and fall back
+to the Python/NumPy renderer when no compiler is available.

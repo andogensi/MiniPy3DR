@@ -2,9 +2,38 @@
 
 `from minipy3dr import App` で始めるための準備です。
 
-## GitHub から入れる場合
+## 生徒 PC の標準インストール
 
-GitHub に公開したリポジトリから入れる場合は、次を 1 回だけ実行します。
+生徒 PC には Visual Studio Build Tools が入っていない想定なので、
+PyPI に置いた prebuilt wheel を入れるのを標準にします。
+PowerShell で次を 1 回だけ実行します。
+
+```powershell
+python -m pip install minipy3dr
+```
+
+pip が今使っている 64-bit Python のバージョンを見て、
+`cp310`, `cp311`, `cp312`, `cp313` のうち合う Windows wheel を
+PyPI から選んでインストールします。native renderer も入るので、
+C++ コンパイラは不要です。
+
+バージョンを固定したい授業では、`==` で指定します。
+
+```powershell
+python -m pip install "minipy3dr==0.4.0"
+```
+
+native renderer が入っているか確認します。
+
+```powershell
+python -c "from minipy3dr.render import is_native_available; print(is_native_available())"
+```
+
+## GitHub のソースから入れる場合
+
+先生側の確認や開発では GitHub から直接入れられます。
+ただし、この方法はローカル PC で C++ 拡張をビルドしようとするため、
+生徒 PC の標準手順にはしません。
 
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
@@ -16,24 +45,11 @@ python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 uv pip install "git+https://github.com/andogensi/MiniPy3DR.git"
 ```
 
-バージョンを固定したい場合は、タグを付けてから次のようにします。
+タグで固定する場合:
 
 ```powershell
 python -m pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.0"
-```
-
-`uv` を使う場合:
-
-```powershell
 uv pip install "git+https://github.com/andogensi/MiniPy3DR.git@v0.4.0"
-```
-
-Visual Studio Build Tools が入っていない Windows PC では、GitHub Release の
-prebuilt wheel を使うと C++ コンパイラ無しで native renderer も入ります。
-
-```powershell
-python -m pip install "https://github.com/andogensi/MiniPy3DR/releases/download/v0.4.0/minipy3dr-0.4.0-cp313-cp313-win_amd64.whl"
-python -c "from minipy3dr.render import is_native_available; print(is_native_available())"
 ```
 
 ## ローカル開発時の準備
