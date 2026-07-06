@@ -19,7 +19,7 @@ import warnings
 from minipy3dr.core import DirectionalLight, Material, Mesh, PerspectiveCamera, Scene
 from minipy3dr.loaders import ObjLoadError, load_obj
 from minipy3dr.math import Vector3
-from minipy3dr.render import Renderer
+from minipy3dr.render import Renderer, resolve_render_mode
 
 
 Resolution = tuple[int, int]
@@ -237,13 +237,20 @@ def _render_frame(
         if present is not None:
             present()
     except ValueError as exc:
-        if mode == "solid_native":
+        if _is_native_mode(mode):
             raise UnsupportedRenderMode("not built") from exc
         raise
     except RuntimeError as exc:
-        if mode == "solid_native":
+        if _is_native_mode(mode):
             raise UnsupportedRenderMode(str(exc)) from exc
         raise
+
+
+def _is_native_mode(mode: str) -> bool:
+    try:
+        return resolve_render_mode(mode) == "solid_native"
+    except ValueError:
+        return False
 
 
 def _init_pygame(headless: bool) -> object:

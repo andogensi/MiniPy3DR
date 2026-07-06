@@ -5,7 +5,7 @@ from minipy3dr.core import DirectionalLight, Material, Mesh, PerspectiveCamera, 
 from minipy3dr.loaders import ObjLoadError, load_obj, loads_obj
 from minipy3dr.math import Matrix4, Transform, Vector2, Vector3, Vector4
 from minipy3dr.pygame import KeyboardCameraController
-from minipy3dr.render import Renderer
+from minipy3dr.render import NativeRenderer, Renderer
 
 __version__ = "0.4.2"
 
@@ -21,6 +21,7 @@ __all__ = [
     "Material",
     "Mesh",
     "MiniPy3DRApp",
+    "NativeRenderer",
     "ObjLoadError",
     "PerspectiveCamera",
     "Renderer",

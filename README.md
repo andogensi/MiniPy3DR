@@ -27,6 +27,19 @@ Check that the native renderer is available:
 python -c "from minipy3dr.render import is_native_available; print(is_native_available())"
 ```
 
+`App` uses `mode="auto"` by default, which selects the native renderer when it
+is available and falls back to the NumPy renderer otherwise. To force native
+rendering:
+
+```python
+from minipy3dr import App, NativeRenderer, Renderer
+
+app = App(mode="native")
+
+renderer = NativeRenderer(size=(800, 600))
+# Same as: Renderer(size=(800, 600), mode="native")
+```
+
 With uv:
 
 ```powershell

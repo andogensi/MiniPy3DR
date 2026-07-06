@@ -28,18 +28,42 @@ class _NativeSceneCache:
     items: tuple[object, ...]
 
 
+_RENDER_MODES = {"solid", "solid_fast", "solid_numpy", "solid_native", "wireframe"}
+_RENDER_MODE_ALIASES = {
+    "fast": "solid_fast",
+    "native": "solid_native",
+    "numpy": "solid_numpy",
+    "wire": "wireframe",
+}
+
+
+def resolve_render_mode(mode: str) -> str:
+    """Return the concrete renderer mode for user-facing aliases."""
+
+    normalized = mode.strip().lower()
+    if normalized == "auto":
+        return "solid_native" if is_native_available() else "solid_numpy"
+    normalized = _RENDER_MODE_ALIASES.get(normalized, normalized)
+    if normalized not in _RENDER_MODES:
+        valid = ", ".join(sorted((*_RENDER_MODES, *_RENDER_MODE_ALIASES, "auto")))
+        raise ValueError(f"mode must be one of: {valid}")
+    return normalized
+
+
 class Renderer:
     def __init__(
         self,
         size: tuple[int, int],
         background: tuple[int, int, int] = (16, 18, 24),
         wire_color: tuple[int, int, int] = (240, 244, 255),
+        mode: str = "solid",
     ) -> None:
         self.width, self.height = size
         if self.width <= 0 or self.height <= 0:
             raise ValueError("Renderer size must be positive")
         self.background = background
         self.wire_color = wire_color
+        self.mode = resolve_render_mode(mode)
         self.zbuffer = ZBuffer(self.width, self.height)
         self.numpy_buffer = NumpyFrameBuffer(self.width, self.height, self.background)
         self.native_buffer: NativeFrameBuffer | None = None
@@ -52,10 +76,9 @@ class Renderer:
         scene: Scene,
         camera: PerspectiveCamera,
         target: object,
-        mode: str = "solid",
+        mode: str | None = None,
     ) -> None:
-        if mode not in {"solid", "solid_fast", "solid_numpy", "solid_native", "wireframe"}:
-            raise ValueError('mode must be "solid", "solid_fast", "solid_numpy", "solid_native", or "wireframe"')
+        mode = self.mode if mode is None else resolve_render_mode(mode)
 
         if mode == "solid_fast":
             self.clear(target)
@@ -590,3 +613,20 @@ class Renderer:
         center_y = (a.y + b.y + c.y) / 3.0
         center_z = (a.z + b.z + c.z) / 3.0
         return normal_x * -center_x + normal_y * -center_y + normal_z * -center_z > 0
+
+
+class NativeRenderer(Renderer):
+    """Renderer that uses the native C++ path by default."""
+
+    def __init__(
+        self,
+        size: tuple[int, int],
+        background: tuple[int, int, int] = (16, 18, 24),
+        wire_color: tuple[int, int, int] = (240, 244, 255),
+    ) -> None:
+        super().__init__(
+            size=size,
+            background=background,
+            wire_color=wire_color,
+            mode="native",
+        )

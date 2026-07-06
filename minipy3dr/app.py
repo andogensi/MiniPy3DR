@@ -158,7 +158,7 @@ class MiniPy3DRApp:
         title: str = "MiniPy3DR",
         render_scale: float = 1.0,
         background: tuple[int, int, int] = (16, 18, 24),
-        mode: str = "solid_numpy",
+        mode: str = "auto",
         fps: int = 60,
         fov: float = 70.0,
         near: float = 0.1,
@@ -176,7 +176,6 @@ class MiniPy3DRApp:
             max(1, int(size[0] * render_scale)),
             max(1, int(size[1] * render_scale)),
         )
-        self.mode = mode
         self.fps = fps
         self.screen = pygame.display.set_mode(size)
         self.render_surface = (
@@ -184,7 +183,8 @@ class MiniPy3DRApp:
         )
         pygame.display.set_caption(title)
         self.clock = pygame.time.Clock()
-        self.renderer = Renderer(self.render_size, background=background)
+        self.renderer = Renderer(self.render_size, background=background, mode=mode)
+        self.mode = self.renderer.mode
         self.scene = Scene()
         self.camera = PerspectiveCamera(
             fov=fov,

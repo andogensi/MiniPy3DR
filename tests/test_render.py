@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from minipy3dr import DirectionalLight, Material, Mesh, PerspectiveCamera, Renderer, Scene
+import minipy3dr.render.renderer as renderer_module
+from minipy3dr import DirectionalLight, Material, Mesh, NativeRenderer, PerspectiveCamera, Renderer, Scene
 from minipy3dr.math import Vector3
-from minipy3dr.render import NumpyFrameBuffer, Rasterizer, ZBuffer
+from minipy3dr.render import NumpyFrameBuffer, Rasterizer, ZBuffer, resolve_render_mode
 
 
 class SurfaceStub:
@@ -25,6 +26,25 @@ class SurfaceStub:
 
     def changed_pixels(self, background: tuple[int, int, int]) -> int:
         return sum(pixel != background for row in self.pixels for pixel in row)
+
+
+class NativeBufferSpy:
+    def __init__(self) -> None:
+        self.render_scene_calls = 0
+        self.clear_calls = 0
+        self.blit_calls = 0
+
+    def clear(self, background: tuple[int, int, int]) -> None:
+        del background
+        self.clear_calls += 1
+
+    def render_scene(self, *args: object) -> None:
+        self.render_scene_calls += 1
+        assert len(args) == 15
+
+    def blit_to_surface(self, target: object) -> None:
+        del target
+        self.blit_calls += 1
 
 
 def make_cube_scene() -> tuple[Scene, PerspectiveCamera]:
@@ -120,30 +140,45 @@ def test_numpy_solid_render_changes_pixels() -> None:
     assert surface.get_at((48, 48)) != (*renderer.background, 255)
 
 
+def test_render_mode_aliases_are_resolved(monkeypatch: pytest.MonkeyPatch) -> None:
+    assert resolve_render_mode("native") == "solid_native"
+    assert resolve_render_mode("numpy") == "solid_numpy"
+    assert resolve_render_mode("fast") == "solid_fast"
+    assert resolve_render_mode("wire") == "wireframe"
+
+    monkeypatch.setattr(renderer_module, "is_native_available", lambda: False)
+    assert renderer_module.resolve_render_mode("auto") == "solid_numpy"
+    monkeypatch.setattr(renderer_module, "is_native_available", lambda: True)
+    assert renderer_module.resolve_render_mode("auto") == "solid_native"
+
+
+def test_renderer_default_mode_can_be_set_in_constructor() -> None:
+    assert Renderer((96, 96), mode="native").mode == "solid_native"
+    assert Renderer((96, 96), mode="numpy").mode == "solid_numpy"
+
+
+def test_native_renderer_defaults_to_native_mode() -> None:
+    assert NativeRenderer((96, 96)).mode == "solid_native"
+
+
 def test_native_solid_path_uses_one_scene_render_call() -> None:
-    class NativeBufferSpy:
-        def __init__(self) -> None:
-            self.render_scene_calls = 0
-            self.clear_calls = 0
-            self.blit_calls = 0
-
-        def clear(self, background: tuple[int, int, int]) -> None:
-            del background
-            self.clear_calls += 1
-
-        def render_scene(self, *args: object) -> None:
-            self.render_scene_calls += 1
-            assert len(args) == 15
-
-        def blit_to_surface(self, target: object) -> None:
-            del target
-            self.blit_calls += 1
-
     renderer = Renderer((96, 96))
     renderer.native_buffer = NativeBufferSpy()  # type: ignore[assignment]
     scene, camera = make_cube_scene()
 
     renderer.draw_solid_native(scene, camera, object())
+
+    assert renderer.native_buffer.render_scene_calls == 1  # type: ignore[union-attr]
+    assert renderer.native_buffer.clear_calls == 0  # type: ignore[union-attr]
+    assert renderer.native_buffer.blit_calls == 1  # type: ignore[union-attr]
+
+
+def test_native_mode_alias_uses_one_scene_render_call() -> None:
+    renderer = Renderer((96, 96))
+    renderer.native_buffer = NativeBufferSpy()  # type: ignore[assignment]
+    scene, camera = make_cube_scene()
+
+    renderer.render(scene, camera, object(), mode="native")
 
     assert renderer.native_buffer.render_scene_calls == 1  # type: ignore[union-attr]
     assert renderer.native_buffer.clear_calls == 0  # type: ignore[union-attr]
