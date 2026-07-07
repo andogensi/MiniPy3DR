@@ -7,7 +7,7 @@ from minipy3dr.math import Matrix4, Transform, Vector2, Vector3, Vector4
 from minipy3dr.pygame import KeyboardCameraController
 from minipy3dr.render import NativeRenderer, Renderer
 
-__version__ = "0.4.2"
+__version__ = "0.5.0"
 
 App = MiniPy3DRApp
 

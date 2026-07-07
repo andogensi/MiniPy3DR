@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "minipy3dr"
-version = "0.5.0"
+dynamic = ["version"]
 description = "A small software 3D renderer for pygame surfaces."
 readme = "README.md"
 license = "MIT"
@@ -49,6 +49,9 @@ dev = [
 [project.scripts]
 minipy3dr-demo = "minipy3dr.demo:main"
 minipy3dr-benchmark = "minipy3dr.benchmark:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "minipy3dr.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["minipy3dr*"]
